@@ -69,8 +69,7 @@ class Hub(bootsteps.StartStopStep):
         w.hub = get_event_loop()
         if w.hub is None:
             required_hub = getattr(w._conninfo, 'requires_hub', None)
-            w.hub = set_event_loop((
-                required_hub if required_hub else _Hub)(w.timer))
+            w.hub = set_event_loop((required_hub or _Hub)(w.timer))
         self._patch_thread_primitives(w)
         return self
 

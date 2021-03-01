@@ -2,6 +2,7 @@
 
 Pool implementation using :mod:`multiprocessing`.
 """
+
 import os
 
 from billiard import forking_enable
@@ -26,11 +27,7 @@ WORKER_SIGRESET = {
 }
 
 #: List of signals to ignore when a child process starts.
-if REMAP_SIGTERM:
-    WORKER_SIGIGNORE = {'SIGINT', TERM_SIGNAME}
-else:
-    WORKER_SIGIGNORE = {'SIGINT'}
-
+WORKER_SIGIGNORE = {'SIGINT', TERM_SIGNAME} if REMAP_SIGTERM else {'SIGINT'}
 logger = get_logger(__name__)
 warning, debug = logger.warning, logger.debug
 

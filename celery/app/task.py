@@ -539,32 +539,32 @@ class Task:
             options.setdefault('priority', self.priority)
 
         app = self._get_app()
-        if app.conf.task_always_eager:
-            with app.producer_or_acquire(producer) as eager_producer:
-                serializer = options.get('serializer')
-                if serializer is None:
-                    if eager_producer.serializer:
-                        serializer = eager_producer.serializer
-                    else:
-                        serializer = app.conf.task_serializer
-                body = args, kwargs
-                content_type, content_encoding, data = serialization.dumps(
-                    body, serializer,
-                )
-                args, kwargs = serialization.loads(
-                    data, content_type, content_encoding,
-                    accept=[content_type]
-                )
-            with denied_join_result():
-                return self.apply(args, kwargs, task_id=task_id or uuid(),
-                                  link=link, link_error=link_error, **options)
-        else:
+        if not app.conf.task_always_eager:
             return app.send_task(
                 self.name, args, kwargs, task_id=task_id, producer=producer,
                 link=link, link_error=link_error, result_cls=self.AsyncResult,
                 shadow=shadow, task_type=self,
                 **options
             )
+
+        with app.producer_or_acquire(producer) as eager_producer:
+            serializer = options.get('serializer')
+            if serializer is None:
+                if eager_producer.serializer:
+                    serializer = eager_producer.serializer
+                else:
+                    serializer = app.conf.task_serializer
+            body = args, kwargs
+            content_type, content_encoding, data = serialization.dumps(
+                body, serializer,
+            )
+            args, kwargs = serialization.loads(
+                data, content_type, content_encoding,
+                accept=[content_type]
+            )
+        with denied_join_result():
+            return self.apply(args, kwargs, task_id=task_id or uuid(),
+                              link=link, link_error=link_error, **options)
 
     def shadow_name(self, args, kwargs, options):
         """Override for custom task name in worker logs/monitoring.
@@ -914,9 +914,8 @@ class Task:
 
         if self.request.is_eager:
             return sig.apply().get()
-        else:
-            sig.delay()
-            raise Ignore('Replaced by new task')
+        sig.delay()
+        raise Ignore('Replaced by new task')
 
     def add_to_chord(self, sig, lazy=False):
         """Add signature to the chord the current task is a member of.

@@ -71,11 +71,7 @@ class CursesMonitor:  # pragma: no cover
         detail_width = mx - 1 - STATE_WIDTH - 1 - TIMESTAMP_WIDTH
         uuid_space = detail_width - 1 - MIN_TASK_WIDTH - 1 - MIN_WORKER_WIDTH
 
-        if uuid_space < UUID_WIDTH:
-            uuid_width = uuid_space
-        else:
-            uuid_width = UUID_WIDTH
-
+        uuid_width = min(uuid_space, UUID_WIDTH)
         detail_width = detail_width - uuid_width - 1
         task_width = int(ceil(detail_width / 2.0))
         worker_width = detail_width - task_width - 1

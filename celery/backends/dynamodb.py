@@ -245,10 +245,11 @@ class DynamoDBBackend(KeyValueStoreBackend):
         )
 
         # Find missing methods.
-        missing_methods = []
-        for method in list(required_methods):
-            if not hasattr(self._client, method):
-                missing_methods.append(method)
+        missing_methods = [
+            method
+            for method in list(required_methods)
+            if not hasattr(self._client, method)
+        ]
 
         if missing_methods:
             logger.error(

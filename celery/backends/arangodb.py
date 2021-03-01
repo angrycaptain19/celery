@@ -184,11 +184,10 @@ class ArangoDbBackend(KeyValueStoreBackend):
                 results.extend(query.response['result'])
                 query.nextBatch()
         except StopIteration:
-            values = [
+            return [
                 result if result is None else json.dumps(result)
                 for result in results
             ]
-            return values
         except AQLQueryError as aql_err:
             logging.error(aql_err)
             return [None] * len(keys)

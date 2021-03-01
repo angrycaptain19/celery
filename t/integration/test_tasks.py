@@ -35,9 +35,7 @@ class test_class_based_tasks:
 
 def _producer(j):
     """Single producer helper function"""
-    results = []
-    for i in range(20):
-        results.append([i + j, add.delay(i, j)])
+    results = [[i + j, add.delay(i, j)] for i in range(20)]
     for expected, result in results:
         value = result.get(timeout=10)
         assert value == expected

@@ -30,7 +30,7 @@ class Trap:
     def __getattr__(self, name):
         # Workaround to allow unittest.mock to patch this object
         # in Python 3.8 and above.
-        if name == '_is_coroutine' or name == '__func__':
+        if name in ['_is_coroutine', '__func__']:
             return None
         print(name)
         raise RuntimeError('Test depends on current_app')

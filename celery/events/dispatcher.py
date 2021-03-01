@@ -176,25 +176,26 @@ class EventDispatcher:
                 in hours.
             **fields (Any): Event fields -- must be json serializable.
         """
-        if self.enabled:
-            groups, group = self.groups, group_from(type)
-            if groups and group not in groups:
-                return
-            if group in self.buffer_group:
-                clock = self.clock.forward()
-                event = Event(type, hostname=self.hostname,
-                              utcoffset=utcoffset(),
-                              pid=self.pid, clock=clock, **fields)
-                buf = self._group_buffer[group]
-                buf.append(event)
-                if len(buf) >= self.buffer_limit:
-                    self.flush()
-                elif self.on_send_buffered:
-                    self.on_send_buffered()
-            else:
-                return self.publish(type, fields, self.producer, blind=blind,
-                                    Event=Event, retry=retry,
-                                    retry_policy=retry_policy)
+        if not self.enabled:
+            return
+        groups, group = self.groups, group_from(type)
+        if groups and group not in groups:
+            return
+        if group not in self.buffer_group:
+            return self.publish(type, fields, self.producer, blind=blind,
+                                Event=Event, retry=retry,
+                                retry_policy=retry_policy)
+
+        clock = self.clock.forward()
+        event = Event(type, hostname=self.hostname,
+                      utcoffset=utcoffset(),
+                      pid=self.pid, clock=clock, **fields)
+        buf = self._group_buffer[group]
+        buf.append(event)
+        if len(buf) >= self.buffer_limit:
+            self.flush()
+        elif self.on_send_buffered:
+            self.on_send_buffered()
 
     def flush(self, errors=True, groups=True):
         """Flush the outbound buffer."""

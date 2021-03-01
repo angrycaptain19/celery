@@ -485,14 +485,13 @@ class crontab(BaseSchedule):
                                             months_of_year[datedata.moy],
                                             days_of_month[datedata.dom])))
 
-                if flag:
-                    datedata.dom = 0
-                    datedata.moy += 1
-                    if datedata.moy == len(months_of_year):
-                        datedata.moy = 0
-                        datedata.year += 1
-                else:
+                if not flag:
                     break
+                datedata.dom = 0
+                datedata.moy += 1
+                if datedata.moy == len(months_of_year):
+                    datedata.moy = 0
+                    datedata.year += 1
             else:
                 # Tried 2000 times, we're most likely in an infinite loop
                 raise RuntimeError('unable to rollover, '
@@ -799,8 +798,7 @@ class solar(BaseSchedule):
             )
         next = self.maybe_make_aware(next_utc.datetime())
         now = self.maybe_make_aware(self.now())
-        delta = next - now
-        return delta
+        return next - now
 
     def is_due(self, last_run_at):
         """Return tuple of ``(is_due, next_time_to_run)``.

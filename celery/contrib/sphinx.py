@@ -87,9 +87,8 @@ def autodoc_skip_member_handler(app, what, name, obj, skip, options):
     # trips up the logic in sphinx.ext.autodoc that is supposed to
     # suppress repetition of class documentation in an instance of the
     # class. This overrides that behavior.
-    if isinstance(obj, BaseTask) and getattr(obj, '__wrapped__'):
-        if skip:
-            return False
+    if isinstance(obj, BaseTask) and getattr(obj, '__wrapped__') and skip:
+        return False
     return None
 
 

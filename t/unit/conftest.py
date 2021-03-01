@@ -81,11 +81,10 @@ def reset_cache_backend_state(celery_app):
     """Fixture that resets the internal state of the cache result backend."""
     yield
     backend = celery_app.__dict__.get('backend')
-    if backend is not None:
-        if isinstance(backend, CacheBackend):
-            if isinstance(backend.client, DummyClient):
-                backend.client.cache.clear()
-            backend._cache.clear()
+    if backend is not None and isinstance(backend, CacheBackend):
+        if isinstance(backend.client, DummyClient):
+            backend.client.cache.clear()
+        backend._cache.clear()
 
 
 @decorator

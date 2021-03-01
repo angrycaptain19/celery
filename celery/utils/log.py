@@ -73,15 +73,14 @@ def logger_isa(l, p, max=1000):
     for _ in range(max):
         if this == p:
             return True
-        else:
-            if this in seen:
-                raise RuntimeError(
-                    f'Logger {l.name!r} parents recursive',
-                )
-            seen.add(this)
-            this = this.parent
-            if not this:
-                break
+        if this in seen:
+            raise RuntimeError(
+                f'Logger {l.name!r} parents recursive',
+            )
+        seen.add(this)
+        this = this.parent
+        if not this:
+            break
     else:  # pragma: no cover
         raise RuntimeError(f'Logger hierarchy exceeds {max}')
     return False
@@ -138,8 +137,7 @@ class ColorFormatter(logging.Formatter):
     def formatException(self, ei):
         if ei and not isinstance(ei, tuple):
             ei = sys.exc_info()
-        r = logging.Formatter.formatException(self, ei)
-        return r
+        return logging.Formatter.formatException(self, ei)
 
     def format(self, record):
         msg = logging.Formatter.format(self, record)

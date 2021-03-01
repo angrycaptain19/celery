@@ -63,10 +63,10 @@ def _add_doc(m):
 
 def parse_dist_meta():
     """Extract metadata information from ``$dist/__init__.py``."""
-    pats = {re_meta: _add_default, re_doc: _add_doc}
     here = os.path.abspath(os.path.dirname(__file__))
     with open(os.path.join(here, NAME, '__init__.py')) as meta_fh:
         distmeta = {}
+        pats = {re_meta: _add_default, re_doc: _add_doc}
         for line in meta_fh:
             if line.strip() == '# -eof meta-':
                 break

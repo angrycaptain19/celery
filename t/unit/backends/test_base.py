@@ -705,7 +705,10 @@ class test_KeyValueStoreBackend:
         it = self.b.get_many(list(ids), interval=0.01, max_iterations=1, READY_STATES=ready_states)
         it_list = list(it)
 
-        assert all([got_state['status'] in ready_states for (got_id, got_state) in it_list])
+        assert all(
+            got_state['status'] in ready_states for (got_id, got_state) in it_list
+        )
+
         assert len(it_list) == tasks_length / 2
 
     def test_chord_part_return_no_gid(self):

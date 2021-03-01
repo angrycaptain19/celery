@@ -52,6 +52,7 @@ Misc
 
 """
 
+
 __all__ = (
     'PENDING', 'RECEIVED', 'STARTED', 'SUCCESS', 'FAILURE',
     'REVOKED', 'RETRY', 'IGNORED', 'READY_STATES', 'UNREADY_STATES',
@@ -74,7 +75,7 @@ PRECEDENCE = [
 ]
 
 #: Hash lookup of PRECEDENCE to index
-PRECEDENCE_LOOKUP = dict(zip(PRECEDENCE, range(0, len(PRECEDENCE))))
+PRECEDENCE_LOOKUP = dict(zip(PRECEDENCE, range(len(PRECEDENCE))))
 NONE_PRECEDENCE = PRECEDENCE_LOOKUP[None]
 
 

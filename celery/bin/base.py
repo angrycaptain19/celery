@@ -63,9 +63,7 @@ class CLIContext:
     def echo(self, message=None, **kwargs):
         if self.no_color:
             kwargs['color'] = False
-            click.echo(message, **kwargs)
-        else:
-            click.echo(message, **kwargs)
+        click.echo(message, **kwargs)
 
     def error(self, message=None, **kwargs):
         kwargs['err'] = True
@@ -81,11 +79,10 @@ class CLIContext:
         if isinstance(n, dict):
             if 'ok' in n or 'error' in n:
                 return self.pretty_dict_ok_error(n)
-            else:
-                s = json.dumps(n, sort_keys=True, indent=4)
-                if not self.no_color:
-                    s = highlight(s, LEXER, FORMATTER)
-                return self.OK, s
+            s = json.dumps(n, sort_keys=True, indent=4)
+            if not self.no_color:
+                s = highlight(s, LEXER, FORMATTER)
+            return self.OK, s
         if isinstance(n, str):
             return self.OK, n
         return self.OK, pformat(n)

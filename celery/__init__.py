@@ -123,10 +123,10 @@ def maybe_patch_concurrency(argv=None, short_opts=None,
     to be patched is completed as early as possible.
     (e.g., eventlet/gevent monkey patches).
     """
-    argv = argv if argv else sys.argv
-    short_opts = short_opts if short_opts else ['-P']
-    long_opts = long_opts if long_opts else ['--pool']
-    patches = patches if patches else {'eventlet': _patch_eventlet,
+    argv = argv or sys.argv
+    short_opts = short_opts or ['-P']
+    long_opts = long_opts or ['--pool']
+    patches = patches or {'eventlet': _patch_eventlet,
                                        'gevent': _patch_gevent}
     try:
         pool = _find_option_with_arg(argv, short_opts, long_opts)

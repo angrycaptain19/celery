@@ -304,10 +304,7 @@ class Backend:
                                                    celery.exceptions.__name__)
                 exc_msg = exc['exc_message']
                 try:
-                    if isinstance(exc_msg, (tuple, list)):
-                        exc = cls(*exc_msg)
-                    else:
-                        exc = cls(exc_msg)
+                    exc = cls(*exc_msg) if isinstance(exc_msg, (tuple, list)) else cls(exc_msg)
                 except Exception as err:  # noqa
                     exc = Exception(f'{cls}({exc_msg})')
             if self.serializer in EXCEPTION_ABLE_CODECS:
@@ -390,28 +387,27 @@ class Backend:
         if request and getattr(request, 'parent_id', None):
             meta['parent_id'] = request.parent_id
 
-        if self.app.conf.find_value_for_key('extended', 'result'):
-            if request:
-                request_meta = {
-                    'name': getattr(request, 'task', None),
-                    'args': getattr(request, 'args', None),
-                    'kwargs': getattr(request, 'kwargs', None),
-                    'worker': getattr(request, 'hostname', None),
-                    'retries': getattr(request, 'retries', None),
-                    'queue': request.delivery_info.get('routing_key')
-                    if hasattr(request, 'delivery_info') and
-                    request.delivery_info else None
-                }
+        if self.app.conf.find_value_for_key('extended', 'result') and request:
+            request_meta = {
+                'name': getattr(request, 'task', None),
+                'args': getattr(request, 'args', None),
+                'kwargs': getattr(request, 'kwargs', None),
+                'worker': getattr(request, 'hostname', None),
+                'retries': getattr(request, 'retries', None),
+                'queue': request.delivery_info.get('routing_key')
+                if hasattr(request, 'delivery_info') and
+                request.delivery_info else None
+            }
 
-                if encode:
-                    # args and kwargs need to be encoded properly before saving
-                    encode_needed_fields = {"args", "kwargs"}
-                    for field in encode_needed_fields:
-                        value = request_meta[field]
-                        encoded_value = self.encode(value)
-                        request_meta[field] = ensure_bytes(encoded_value)
+            if encode:
+                # args and kwargs need to be encoded properly before saving
+                encode_needed_fields = {"args", "kwargs"}
+                for field in encode_needed_fields:
+                    value = request_meta[field]
+                    encoded_value = self.encode(value)
+                    request_meta[field] = ensure_bytes(encoded_value)
 
-                meta.update(request_meta)
+            meta.update(request_meta)
 
         return meta
 
