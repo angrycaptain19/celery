@@ -135,7 +135,7 @@ class test_crontab_parser:
 
     def test_parse_range(self):
         assert crontab_parser(60).parse('1-10') == set(range(1, 10 + 1))
-        assert crontab_parser(24).parse('0-20') == set(range(0, 20 + 1))
+        assert crontab_parser(24).parse('0-20') == set(range(20 + 1))
         assert crontab_parser().parse('2-10') == set(range(2, 10 + 1))
         assert crontab_parser(60, 1).parse('1-10') == set(range(1, 10 + 1))
 
@@ -600,9 +600,8 @@ class test_crontab_is_due:
                 assertions.assertAlmostEqual(a, b + skew, precision)
             except Exception as exc:
                 # AssertionError != builtins.AssertionError in pytest
-                if 'AssertionError' in str(exc):
-                    if index + 1 >= 3:
-                        raise
+                if 'AssertionError' in str(exc) and index >= 2:
+                    raise
             else:
                 break
 

@@ -798,9 +798,7 @@ class ResultSet(ResultBase):
         for task_id, meta in self.iter_native(timeout, interval, no_ack,
                                               on_message, on_interval):
             if isinstance(meta, list):
-                value = []
-                for children_result in meta:
-                    value.append(children_result.get())
+                value = [children_result.get() for children_result in meta]
             else:
                 value = meta['result']
                 if propagate and meta['status'] in states.PROPAGATE_STATES:

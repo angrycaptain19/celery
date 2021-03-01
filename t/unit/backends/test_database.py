@@ -199,7 +199,7 @@ class test_DatabaseBackend:
 
     def test_cleanup(self):
         tb = DatabaseBackend(self.uri, app=self.app)
-        for i in range(10):
+        for _ in range(10):
             tb.mark_as_done(uuid(), 42)
             tb.save_group(uuid(), {'foo': 'bar'})
         s = tb.ResultSession()

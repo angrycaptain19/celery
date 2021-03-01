@@ -41,8 +41,7 @@ class test_TaskPool:
 
         def mycallback(ret_value):
             process = next(proc_counter)
-            scratchpad[process] = {}
-            scratchpad[process]['ret_value'] = ret_value
+            scratchpad[process] = {'ret_value': ret_value}
 
         myerrback = mycallback
 

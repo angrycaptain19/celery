@@ -140,9 +140,7 @@ class AsyncBackendMixin:
         # into these buckets.
         bucket = deque()
         for node in results:
-            if not hasattr(node, '_cache'):
-                bucket.append(node)
-            elif node._cache:
+            if not hasattr(node, '_cache') or node._cache:
                 bucket.append(node)
             else:
                 self._collect_into(node, bucket)

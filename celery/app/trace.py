@@ -262,14 +262,10 @@ def traceback_clear(exc=None):
     # Cleared Tb, but einfo still has a reference to Traceback.
     # exc cleans up the Traceback at the last moment that can be revealed.
     tb = None
-    if exc is not None:
-        if hasattr(exc, '__traceback__'):
-            tb = exc.__traceback__
-        else:
-            _, _, tb = sys.exc_info()
+    if exc is not None and hasattr(exc, '__traceback__'):
+        tb = exc.__traceback__
     else:
         _, _, tb = sys.exc_info()
-
     while tb is not None:
         try:
             tb.tb_frame.clear()
@@ -500,11 +496,10 @@ def build_tracer(name, task, loader=None, hostname=None, store_errors=True,
                             })
 
                 # -* POST *-
-                if state not in IGNORE_STATES:
-                    if task_after_return:
-                        task_after_return(
-                            state, retval, uuid, args, kwargs, None,
-                        )
+                if state not in IGNORE_STATES and task_after_return:
+                    task_after_return(
+                        state, retval, uuid, args, kwargs, None,
+                    )
             finally:
                 try:
                     if postrun_receivers:

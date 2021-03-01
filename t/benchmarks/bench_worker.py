@@ -83,7 +83,6 @@ def bench_work(n=DEFAULT_ITS, loglevel='CRITICAL'):
         worker.start()
     except SystemExit:
         raise
-        assert sum(worker.state.total_count.values()) == n + 1
 
 
 def bench_both(n=DEFAULT_ITS):

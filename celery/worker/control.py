@@ -147,11 +147,11 @@ def revoke(state, task_id, terminate=False, signal=None, **kwargs):
     # supports list argument since 3.1
     task_ids, task_id = set(maybe_list(task_id) or []), None
     size = len(task_ids)
-    terminated = set()
-
     worker_state.revoked.update(task_ids)
     if terminate:
         signum = _signals.signum(signal or TERM_SIGNAME)
+        terminated = set()
+
         for request in _find_requests_by_id(task_ids):
             if request.id not in terminated:
                 terminated.add(request.id)
@@ -466,9 +466,8 @@ def pool_grow(state, n=1, **kwargs):
     """Grow pool by n processes/threads."""
     if state.consumer.controller.autoscaler:
         return nok("pool_grow is not supported with autoscale. Adjust autoscale range instead.")
-    else:
-        state.consumer.pool.grow(n)
-        state.consumer._update_prefetch_count(n)
+    state.consumer.pool.grow(n)
+    state.consumer._update_prefetch_count(n)
     return ok('pool will grow')
 
 
@@ -480,9 +479,8 @@ def pool_shrink(state, n=1, **kwargs):
     """Shrink pool by n processes/threads."""
     if state.consumer.controller.autoscaler:
         return nok("pool_shrink is not supported with autoscale. Adjust autoscale range instead.")
-    else:
-        state.consumer.pool.shrink(n)
-        state.consumer._update_prefetch_count(-n)
+    state.consumer.pool.shrink(n)
+    state.consumer._update_prefetch_count(-n)
     return ok('pool will shrink')
 
 

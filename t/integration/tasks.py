@@ -255,8 +255,7 @@ def build_chain_inside_task(self):
         ) |
         add.s(5)
     )
-    result = test_chain()
-    return result
+    return test_chain()
 
 
 class ExpectedException(Exception):

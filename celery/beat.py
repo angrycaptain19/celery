@@ -118,8 +118,8 @@ class ScheduleEntry:
         self.name = name
         self.task = task
         self.args = args
-        self.kwargs = kwargs if kwargs else {}
-        self.options = options if options else {}
+        self.kwargs = kwargs or {}
+        self.options = options or {}
         self.schedule = maybe_schedule(schedule, relative, app=self.app)
         self.last_run_at = last_run_at or self.default_now()
         self.total_run_count = total_run_count or 0
@@ -181,10 +181,10 @@ class ScheduleEntry:
         return NotImplemented
 
     def editable_fields_equal(self, other):
-        for attr in ('task', 'args', 'kwargs', 'options', 'schedule'):
-            if getattr(self, attr) != getattr(other, attr):
-                return False
-        return True
+        return all(
+            getattr(self, attr) == getattr(other, attr)
+            for attr in ('task', 'args', 'kwargs', 'options', 'schedule')
+        )
 
     def __eq__(self, other):
         """Test schedule entries equality.
@@ -254,13 +254,15 @@ class Scheduler:
 
     def install_default_entries(self, data):
         entries = {}
-        if self.app.conf.result_expires and \
-                not self.app.backend.supports_autoexpire:
-            if 'celery.backend_cleanup' not in data:
-                entries['celery.backend_cleanup'] = {
-                    'task': 'celery.backend_cleanup',
-                    'schedule': crontab('0', '4', '*'),
-                    'options': {'expires': 12 * 3600}}
+        if (
+            self.app.conf.result_expires
+            and not self.app.backend.supports_autoexpire
+            and 'celery.backend_cleanup' not in data
+        ):
+            entries['celery.backend_cleanup'] = {
+                'task': 'celery.backend_cleanup',
+                'schedule': crontab('0', '4', '*'),
+                'options': {'expires': 12 * 3600}}
         self.update_from_dict(entries)
 
     def apply_entry(self, entry, producer=None):

@@ -76,7 +76,7 @@ class test_security:
 
         now = datetime.datetime.utcnow()
 
-        certificate = x509.CertificateBuilder().subject_name(
+        return x509.CertificateBuilder().subject_name(
             x509.Name([
                 x509.NameAttribute(NameOID.COMMON_NAME, common_name),
             ])
@@ -102,7 +102,6 @@ class test_security:
             algorithm=hashes.SHA256(),
             backend=default_backend()
         )
-        return certificate
 
     @pytest.mark.xfail(reason="Issue #5269")
     def test_security_task_done(self):

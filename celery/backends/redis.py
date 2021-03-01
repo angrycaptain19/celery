@@ -597,13 +597,11 @@ class SentinelBackend(RedisBackend):
         min_other_sentinels = self._transport_options.get("min_other_sentinels", 0)
         sentinel_kwargs = self._transport_options.get("sentinel_kwargs", {})
 
-        sentinel_instance = self.sentinel.Sentinel(
+        return self.sentinel.Sentinel(
             [(cp['host'], cp['port']) for cp in hosts],
             min_other_sentinels=min_other_sentinels,
             sentinel_kwargs=sentinel_kwargs,
             **connparams)
-
-        return sentinel_instance
 
     def _get_pool(self, **params):
         sentinel_instance = self._get_sentinel_instance(**params)

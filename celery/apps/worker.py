@@ -74,8 +74,7 @@ EXTRA_INFO_FMT = """
 
 def active_thread_count():
     from threading import enumerate
-    return sum(1 for t in enumerate()
-               if not t.name.startswith('Dummy-'))
+    return sum(not t.name.startswith('Dummy-') for t in enumerate())
 
 
 def safe_say(msg):
@@ -151,13 +150,12 @@ class Worker(WorkController):
                 'django.conf:settings',
             ]
 
-        if warn_deprecated:
-            if app.conf.maybe_warn_deprecated_settings():
-                logger.warning(
-                    "Please run `celery upgrade settings path/to/settings.py` "
-                    "to avoid these warnings and to allow a smoother upgrade "
-                    "to Celery 6.0."
-                )
+        if warn_deprecated and app.conf.maybe_warn_deprecated_settings():
+            logger.warning(
+                "Please run `celery upgrade settings path/to/settings.py` "
+                "to avoid these warnings and to allow a smoother upgrade "
+                "to Celery 6.0."
+            )
 
     def emit_banner(self):
         # Dump configuration to screen so we have some basic information

@@ -183,8 +183,8 @@ class Signature(dict):
         Same as :meth:`apply_async` but executed the task inline instead
         of sending a task message.
         """
-        args = args if args else ()
-        kwargs = kwargs if kwargs else {}
+        args = args or ()
+        kwargs = kwargs or {}
         # Extra options set to None are dismissed
         options = {k: v for k, v in options.items() if v is not None}
         # For callbacks: extra args are prepended to the stored args.
@@ -206,8 +206,8 @@ class Signature(dict):
         See also:
             :meth:`~@Task.apply_async` and the :ref:`guide-calling` guide.
         """
-        args = args if args else ()
-        kwargs = kwargs if kwargs else {}
+        args = args or ()
+        kwargs = kwargs or {}
         # Extra options set to None are dismissed
         options = {k: v for k, v in options.items() if v is not None}
         try:
@@ -225,8 +225,8 @@ class Signature(dict):
         return _apply(args, kwargs, **options)
 
     def _merge(self, args=None, kwargs=None, options=None, force=False):
-        args = args if args else ()
-        kwargs = kwargs if kwargs else {}
+        args = args or ()
+        kwargs = kwargs or {}
         if options is not None:
             # We build a new options dictionary where values in `options`
             # override values in `self.options` except for keys which are
@@ -253,8 +253,8 @@ class Signature(dict):
             options (Dict): Partial options to be merged with
                 existing options.
         """
-        args = args if args else ()
-        kwargs = kwargs if kwargs else {}
+        args = args or ()
+        kwargs = kwargs or {}
         # need to deepcopy options so origins links etc. is not modified.
         if args or kwargs or opts:
             args, kwargs, opts = self._merge(args, kwargs, opts)
@@ -640,8 +640,8 @@ class _chain(Signature):
 
     def apply_async(self, args=None, kwargs=None, **options):
         # python is best at unpacking kwargs, so .run is here to do that.
-        args = args if args else ()
-        kwargs = kwargs if kwargs else []
+        args = args or ()
+        kwargs = kwargs or []
         app = self.app
         if app.conf.task_always_eager:
             with allow_join_result():
@@ -654,8 +654,8 @@ class _chain(Signature):
             producer=None, root_id=None, parent_id=None, app=None, **options):
         # pylint: disable=redefined-outer-name
         #   XXX chord is also a class in outer scope.
-        args = args if args else ()
-        kwargs = kwargs if kwargs else []
+        args = args or ()
+        kwargs = kwargs or []
         app = app or self.app
         use_link = self._use_link
         if use_link is None and app.conf.task_protocol == 1:
@@ -735,10 +735,7 @@ class _chain(Signature):
 
             # first task gets partial args from chain
             if clone:
-                if is_first_task:
-                    task = task.clone(args, kwargs)
-                else:
-                    task = task.clone()
+                task = task.clone(args, kwargs) if is_first_task else task.clone()
             elif is_first_task:
                 task.args = tuple(args) + tuple(task.args)
 
@@ -815,8 +812,8 @@ class _chain(Signature):
         return tasks, results
 
     def apply(self, args=None, kwargs=None, **options):
-        args = args if args else ()
-        kwargs = kwargs if kwargs else {}
+        args = args or ()
+        kwargs = kwargs or {}
         last, (fargs, fkwargs) = None, (args, kwargs)
         for task in self.tasks:
             res = task.clone(fargs, fkwargs).apply(
@@ -893,12 +890,11 @@ class chain(_chain):
     # could be function, but must be able to reference as :class:`chain`.
     def __new__(cls, *tasks, **kwargs):
         # This forces `chain(X, Y, Z)` to work the same way as `X | Y | Z`
-        if not kwargs and tasks:
-            if len(tasks) != 1 or is_list(tasks[0]):
-                tasks = tasks[0] if len(tasks) == 1 else tasks
-                # if is_list(tasks) and len(tasks) == 1:
-                #     return super(chain, cls).__new__(cls, tasks, **kwargs)
-                return reduce(operator.or_, tasks, chain())
+        if not kwargs and tasks and (len(tasks) != 1 or is_list(tasks[0])):
+            tasks = tasks[0] if len(tasks) == 1 else tasks
+            # if is_list(tasks) and len(tasks) == 1:
+            #     return super(chain, cls).__new__(cls, tasks, **kwargs)
+            return reduce(operator.or_, tasks, chain())
         return super().__new__(cls, *tasks, **kwargs)
 
 
@@ -920,8 +916,8 @@ class _basemap(Signature):
 
     def apply_async(self, args=None, kwargs=None, **opts):
         # need to evaluate generators
-        args = args if args else ()
-        kwargs = kwargs if kwargs else {}
+        args = args or ()
+        kwargs = kwargs or {}
         task, it = self._unpack_args(self.kwargs)
         return self.type.apply_async(
             (), {'task': task, 'it': list(it)},
@@ -980,8 +976,8 @@ class chunks(Signature):
         return self.apply_async(**options)
 
     def apply_async(self, args=None, kwargs=None, **opts):
-        args = args if args else ()
-        kwargs = kwargs if kwargs else {}
+        args = args or ()
+        kwargs = kwargs or {}
         return self.group().apply_async(
             args, kwargs,
             route_name=task_name_from(self.kwargs.get('task')), **opts
@@ -1084,7 +1080,7 @@ class group(Signature):
 
     def apply_async(self, args=None, kwargs=None, add_to_parent=True,
                     producer=None, link=None, link_error=None, **options):
-        args = args if args else ()
+        args = args or ()
         if link is not None:
             raise TypeError('Cannot add link to group: use a chord')
         if link_error is not None:
@@ -1119,8 +1115,8 @@ class group(Signature):
         return result
 
     def apply(self, args=None, kwargs=None, **options):
-        args = args if args else ()
-        kwargs = kwargs if kwargs else {}
+        args = args or ()
+        kwargs = kwargs or {}
         app = self.app
         if not self.tasks:
             return self.freeze()  # empty group returns GroupResult
@@ -1315,8 +1311,8 @@ class chord(Signature):
 
     def __init__(self, header, body=None, task='celery.chord',
                  args=None, kwargs=None, app=None, **options):
-        args = args if args else ()
-        kwargs = kwargs if kwargs else {}
+        args = args or ()
+        kwargs = kwargs or {}
         Signature.__init__(
             self, task, args,
             {'kwargs': kwargs, 'header': _maybe_group(header, app),
@@ -1357,8 +1353,8 @@ class chord(Signature):
     def apply_async(self, args=None, kwargs=None, task_id=None,
                     producer=None, publisher=None, connection=None,
                     router=None, result_cls=None, **options):
-        args = args if args else ()
-        kwargs = kwargs if kwargs else {}
+        args = args or ()
+        kwargs = kwargs or {}
         args = (tuple(args) + tuple(self.args)
                 if args and not self.immutable else self.args)
         body = kwargs.pop('body', None) or self.kwargs['body']
@@ -1382,8 +1378,8 @@ class chord(Signature):
 
     def apply(self, args=None, kwargs=None,
               propagate=True, body=None, **options):
-        args = args if args else ()
-        kwargs = kwargs if kwargs else {}
+        args = args or ()
+        kwargs = kwargs or {}
         body = self.body if body is None else body
         tasks = (self.tasks.clone() if isinstance(self.tasks, group)
                  else group(self.tasks, app=self.app))
@@ -1506,8 +1502,8 @@ class chord(Signature):
                 tasks = self.tasks
             if len(tasks):
                 app = tasks[0]._app
-            if app is None and body is not None:
-                app = body._app
+        if app is None and body is not None:
+            app = body._app
         return app if app is not None else current_app
 
     tasks = getitem_property('kwargs.header', 'Tasks in chord header.')

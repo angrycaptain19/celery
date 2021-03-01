@@ -195,7 +195,7 @@ class Pidfile:
         try:
             os.kill(pid, 0)
         except os.error as exc:
-            if exc.errno == errno.ESRCH or exc.errno == errno.EPERM:
+            if exc.errno in [errno.ESRCH, errno.EPERM]:
                 print('Stale pidfile exists - Removing it.', file=sys.stderr)
                 self.remove()
                 return True
@@ -324,28 +324,30 @@ class DaemonContext:
             os.dup2(dest, fd)
 
     def open(self):
-        if not self._is_open:
-            if not self.fake:
-                self._detach()
+        if self._is_open:
+            return
 
-            os.chdir(self.workdir)
-            if self.umask is not None:
-                os.umask(self.umask)
+        if not self.fake:
+            self._detach()
 
-            if self.after_chdir:
-                self.after_chdir()
+        os.chdir(self.workdir)
+        if self.umask is not None:
+            os.umask(self.umask)
 
-            if not self.fake:
-                # We need to keep /dev/urandom from closing because
-                # shelve needs it, and Beat needs shelve to start.
-                keep = list(self.stdfds) + fd_by_path(['/dev/urandom'])
-                close_open_fds(keep)
-                for fd in self.stdfds:
-                    self.redirect_to_null(maybe_fileno(fd))
-                if self.after_forkers and mputil is not None:
-                    mputil._run_after_forkers()
+        if self.after_chdir:
+            self.after_chdir()
 
-            self._is_open = True
+        if not self.fake:
+            # We need to keep /dev/urandom from closing because
+            # shelve needs it, and Beat needs shelve to start.
+            keep = list(self.stdfds) + fd_by_path(['/dev/urandom'])
+            close_open_fds(keep)
+            for fd in self.stdfds:
+                self.redirect_to_null(maybe_fileno(fd))
+            if self.after_forkers and mputil is not None:
+                mputil._run_after_forkers()
+
+        self._is_open = True
     __enter__ = open
 
     def close(self, *args):
@@ -777,22 +779,26 @@ def check_privileges(accept_content):
     euid = os.geteuid() if hasattr(os, 'geteuid') else 65535
     egid = os.getegid() if hasattr(os, 'getegid') else 65535
 
-    if hasattr(os, 'fchown'):
-        if not all(hasattr(os, attr)
-                   for attr in ['getuid', 'getgid', 'geteuid', 'getegid']):
-            raise SecurityError('suspicious platform, contact support')
+    if hasattr(os, 'fchown') and not all(
+        hasattr(os, attr)
+        for attr in ['getuid', 'getgid', 'geteuid', 'getegid']
+    ):
+        raise SecurityError('suspicious platform, contact support')
 
     if not uid or not gid or not euid or not egid:
-        if ('pickle' in accept_content or
-                'application/x-python-serialize' in accept_content):
-            if not C_FORCE_ROOT:
-                try:
-                    print(ROOT_DISALLOWED.format(
-                        uid=uid, euid=euid, gid=gid, egid=egid,
-                    ), file=sys.stderr)
-                finally:
-                    sys.stderr.flush()
-                    os._exit(1)
+        if (
+            (
+                'pickle' in accept_content
+                or 'application/x-python-serialize' in accept_content
+            )
+        ) and not C_FORCE_ROOT:
+            try:
+                print(ROOT_DISALLOWED.format(
+                    uid=uid, euid=euid, gid=gid, egid=egid,
+                ), file=sys.stderr)
+            finally:
+                sys.stderr.flush()
+                os._exit(1)
         warnings.warn(RuntimeWarning(ROOT_DISCOURAGED.format(
             uid=uid, euid=euid, gid=gid, egid=egid,
         )))
